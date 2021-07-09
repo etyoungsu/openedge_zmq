@@ -50,7 +50,7 @@ class aTask : public oe::core::task::runnable, private mosqpp::mosquittopp  {
 
     private:
         void *ctx = nullptr;
-        void *pub = nullptr;
+        void *cli = nullptr;
 
     private: //for mqtt
         string _mqtt_broker {"127.0.0.1"};

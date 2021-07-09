@@ -14,7 +14,7 @@
 
 namespace zmq
 {
-#include <czmq.h>
+    #include <czmq.h>
 }
 
 using namespace oe;
@@ -53,8 +53,7 @@ private:
 
 private:
     void *ctx = nullptr;
-    void *sub1 = nullptr;
-    void *sub2 = nullptr;
+    void *ser = nullptr;
 
 private: //for mqtt
     string _mqtt_broker{"127.0.0.1"};

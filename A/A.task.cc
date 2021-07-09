@@ -3,7 +3,7 @@
 #include <openedge/log.hpp>
 #include <cstring>
 
-// pub
+// client
 
 //static component instance that has only single instance
 static aTask *_instance = nullptr;
@@ -79,8 +79,8 @@ bool aTask::configure()
             console::warn("({}){}", conret, mosqpp::strerror(conret));
     }
     ctx = zmq::zmq_ctx_new();
-    pub = zmq::zmq_socket(ctx, ZMQ_PUB);
-    int rc = zmq::zmq_bind(pub, "tcp://*:5600");
+    cli = zmq::zmq_socket(ctx, ZMQ_REQ);
+    int rc = zmq::zmq_bind(cli, "tcp://*:5600");
     console::info("zmq bind completed");
     return true;
 }
@@ -88,13 +88,12 @@ bool aTask::configure()
 void aTask::execute()
 {
 
-    int rc = zmq::zstr_send(pub, "hello");
+    int rc = zmq::zstr_send(cli, "hello");
     console::info("hello sent");
-    rc = zmq::zstr_send(pub, "henno");
-    console::info("henno sent");
-    rc = zmq::zstr_send(pub, "no");
-    console::info("no sent");
-    console::info("msg send");
+    char *string = zmq::zstr_recv(cli);
+    rc = zmq::zstr_send(cli, "hi");
+    console::info("received {}", string);
+    zmq::zstr_free(&string);
 }
 
 void aTask::cleanup()
