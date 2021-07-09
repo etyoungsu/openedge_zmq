@@ -1,16 +1,16 @@
 
-#include "B.task.hpp"
+#include "A2.task.hpp"
 #include <openedge/log.hpp>
 #include <cstring>
 
-//sub
+// pub
 
 //static component instance that has only single instance
-static bTask *_instance = nullptr;
+static a2Task *_instance = nullptr;
 oe::core::task::runnable *create()
 {
     if (!_instance)
-        _instance = new bTask();
+        _instance = new a2Task();
     return _instance;
 }
 void release()
@@ -22,7 +22,7 @@ void release()
     }
 }
 
-bool bTask::configure()
+bool a2Task::configure()
 {
 
     //initialize mosquitto
@@ -79,27 +79,25 @@ bool bTask::configure()
             console::warn("({}){}", conret, mosqpp::strerror(conret));
     }
     ctx = zmq::zmq_ctx_new();
+    pub = zmq::zmq_socket(ctx, ZMQ_PUB);
+    int rc = zmq::zmq_bind(pub, "tcp://*:5800");
+    console::info("zmq bind completed");
     return true;
 }
 
-void bTask::execute()
+void a2Task::execute()
 {
-    sub1 = zmq::zmq_socket(ctx, ZMQ_SUB);
-    sub2 = zmq::zmq_socket(ctx, ZMQ_SUB);
-    int rc = zmq::zmq_connect(sub1, "tcp://192.168.11.25:5600");
-    rc = zmq::zmq_connect(sub2, "tcp://192.168.11.25:5800");
-    rc = zmq::zmq_setsockopt(sub1, ZMQ_SUBSCRIBE, "no", 2);
-    rc = zmq::zmq_setsockopt(sub2, ZMQ_SUBSCRIBE, "he", 2);
-    console::info("ready?");
-    char *string1 = zmq::zstr_recv(sub1);
-    char *string2 = zmq::zstr_recv(sub2);
-    console::info("sub1 received {}", string1);
-    console::info("sub2 received {}", string2);
-    zmq::zstr_free(&string1);
-    zmq::zstr_free(&string2);
+
+    int rc = zmq::zstr_send(pub, "hello");
+    console::info("hello sent");
+    rc = zmq::zstr_send(pub, "henno");
+    console::info("henno sent");
+    rc = zmq::zstr_send(pub, "no");
+    console::info("no sent");
+    console::info("msg send");
 }
 
-void bTask::cleanup()
+void a2Task::cleanup()
 {
     //MQTT connection close
     this->disconnect();
@@ -108,15 +106,15 @@ void bTask::cleanup()
     //    zmq::zmq_ctx_destroy(ctx);
 }
 
-void bTask::pause()
+void a2Task::pause()
 {
 }
 
-void bTask::resume()
+void a2Task::resume()
 {
 }
 
-void bTask::on_connect(int rc)
+void a2Task::on_connect(int rc)
 {
     if (rc == MOSQ_ERR_SUCCESS)
         console::info("Successfully connected to MQTT Brocker({})", rc);
@@ -124,15 +122,15 @@ void bTask::on_connect(int rc)
         console::warn("MQTT Broker connection error : {}", rc);
 }
 
-void bTask::on_disconnect(int rc)
+void a2Task::on_disconnect(int rc)
 {
 }
 
-void bTask::on_publish(int mid)
+void a2Task::on_publish(int mid)
 {
 }
 
-void bTask::on_message(const struct mosquitto_message *message)
+void a2Task::on_message(const struct mosquitto_message *message)
 {
 #define MAX_BUFFER_SIZE 4096
 
@@ -145,18 +143,18 @@ void bTask::on_message(const struct mosquitto_message *message)
     console::info("mqtt data({}) : {}", message->payloadlen, strmsg);
 }
 
-void bTask::on_subscribe(int mid, int qos_count, const int *granted_qos)
+void a2Task::on_subscribe(int mid, int qos_count, const int *granted_qos)
 {
 }
 
-void bTask::on_unsubscribe(int mid)
+void a2Task::on_unsubscribe(int mid)
 {
 }
 
-void bTask::on_log(int level, const char *str)
+void a2Task::on_log(int level, const char *str)
 {
 }
 
-void bTask::on_error()
+void a2Task::on_error()
 {
 }

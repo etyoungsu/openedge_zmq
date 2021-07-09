@@ -26,12 +26,12 @@ namespace oe::device
     class bus;
 }
 
-class bTask : public oe::core::task::runnable, private mosqpp::mosquittopp
+class a2Task : public oe::core::task::runnable, private mosqpp::mosquittopp
 {
 
 public:
-    bTask() : mosqpp::mosquittopp(){};
-    virtual ~bTask() = default;
+    a2Task() : mosqpp::mosquittopp(){};
+    virtual ~a2Task() = default;
 
     //component common interface
     bool configure() override;
@@ -53,8 +53,7 @@ private:
 
 private:
     void *ctx = nullptr;
-    void *sub1 = nullptr;
-    void *sub2 = nullptr;
+    void *pub = nullptr;
 
 private: //for mqtt
     string _mqtt_broker{"127.0.0.1"};
