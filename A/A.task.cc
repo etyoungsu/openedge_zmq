@@ -1,9 +1,8 @@
-
 #include "A.task.hpp"
 #include <openedge/log.hpp>
 #include <cstring>
 
-// client
+// pub
 
 //static component instance that has only single instance
 static aTask *_instance = nullptr;
@@ -79,21 +78,16 @@ bool aTask::configure()
             console::warn("({}){}", conret, mosqpp::strerror(conret));
     }
     ctx = zmq::zmq_ctx_new();
-    cli = zmq::zmq_socket(ctx, ZMQ_REQ);
-    int rc = zmq::zmq_bind(cli, "tcp://*:5600");
+    pub = zmq::zmq_socket(ctx, ZMQ_PUB);
+    int rc = zmq::zmq_bind(pub, "tcp://*:5600");
     console::info("zmq bind completed");
     return true;
 }
 
 void aTask::execute()
 {
-
-    int rc = zmq::zstr_send(cli, "hello");
-    console::info("hello sent");
-    char *string = zmq::zstr_recv(cli);
-    rc = zmq::zstr_send(cli, "hi");
-    console::info("received {}", string);
-    zmq::zstr_free(&string);
+    int rc = zmq::zstr_send(pub, "no");
+    console::info("no msg sent");
 }
 
 void aTask::cleanup()

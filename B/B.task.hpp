@@ -10,11 +10,12 @@
 #include <openedge/core.hpp>
 #include <string>
 #include <3rdparty/mosquitto/cpp/mosquittopp.h>
+#include <openedge/log.hpp>
 #include <map>
 
 namespace zmq
 {
-    #include <czmq.h>
+#include <czmq.h>
 }
 
 using namespace oe;
@@ -53,7 +54,16 @@ private:
 
 private:
     void *ctx = nullptr;
-    void *ser = nullptr;
+    void *sub = nullptr;
+
+    void threadFn()
+    {
+    while(1){
+        char *string = zmq::zstr_recv(sub);
+        console::info("received {}", string);
+        zmq::zstr_free(&string);
+        }
+    }
 
 private: //for mqtt
     string _mqtt_broker{"127.0.0.1"};
