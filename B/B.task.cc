@@ -2,9 +2,34 @@
 #include "B.task.hpp"
 #include <openedge/log.hpp>
 #include <cstring>
-#include <thread>
 
-//sub
+bool _thread_except = false;
+
+void threadFn(bTask* pclass)
+{
+    console::info("thread");
+
+    while(1){
+        console::info("1");
+        if(pclass){
+            console::info("2");
+            pclass->zmq_proc();
+            console::info("3");
+        }
+        console::info("4");
+        std::this_thread::sleep_for(100ms);
+        if (_thread_except == true) {
+            break;
+        }
+    }
+    console::info("5");
+
+    // while(1){
+    //     char *string = zmq::zstr_recv(sub);
+    //     console::info("received {}", string);
+    //     zmq::zstr_free(&string);
+    // }
+}
 
 //static component instance that has only single instance
 static bTask *_instance = nullptr;
@@ -21,6 +46,21 @@ void release()
         delete _instance;
         _instance = nullptr;
     }
+}
+
+void bTask::zmq_proc(){
+    if(sub){
+        char *string = zmq::zstr_recv(sub);
+        if (string != nullptr) {
+            console::info("received {}", string);
+        }
+        else {
+            _thread_except = true;
+            console::info("received nothing");
+        }
+        zmq::zstr_free(&string);
+    }
+    
 }
 
 bool bTask::configure()
@@ -82,21 +122,29 @@ bool bTask::configure()
     ctx = zmq::zmq_ctx_new();
     sub = zmq::zmq_socket(ctx, ZMQ_SUB);
     int rc = zmq::zmq_connect(sub, "tcp://192.168.11.25:5600");
-    rc = zmq::zmq_setsockopt(sub, ZMQ_SUBSCRIBE, "no", 2);
+    rc = zmq::zmq_setsockopt(sub, ZMQ_SUBSCRIBE, "hi", 2);
+    int timeout = 5000;
+    rc = zmq::zmq_setsockopt(sub, ZMQ_RCVTIMEO, &timeout, sizeof(int));
     console::info("ready?");
-    std::thread threadFn(&bTask::threadFn, this);
-    threadFn.join();
-    console::info("after join");
+    _read = new std::thread(&threadFn, this);
+//    _read->joinable();
+//  console::info("{}", std::thread::hardware_concurrency());
     return true;
 }
 
 void bTask::execute()
 {
-
+    console::info("waiting,,,,(execute)");
 }
 
 void bTask::cleanup()
 {
+    if(_read){
+        _read->join();
+        delete _read;
+        _read = nullptr;
+    }
+
     //MQTT connection close
     this->disconnect();
     this->loop_stop();

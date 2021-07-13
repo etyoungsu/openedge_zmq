@@ -12,6 +12,7 @@
 #include <3rdparty/mosquitto/cpp/mosquittopp.h>
 #include <openedge/log.hpp>
 #include <map>
+#include <thread>
 
 namespace zmq
 {
@@ -52,18 +53,16 @@ private:
     virtual void on_log(int level, const char *str) override;
     virtual void on_error() override;
 
-private:
+
+public:
+    void zmq_proc();
+
+public:
     void *ctx = nullptr;
     void *sub = nullptr;
 
-    void threadFn()
-    {
-    while(1){
-        char *string = zmq::zstr_recv(sub);
-        console::info("received {}", string);
-        zmq::zstr_free(&string);
-        }
-    }
+private:
+    std::thread* _read = nullptr;
 
 private: //for mqtt
     string _mqtt_broker{"127.0.0.1"};
