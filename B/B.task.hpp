@@ -55,6 +55,14 @@ private:
 
 public:
     void zmq_proc(void *sub);
+    void zmq_sock_sub(const char *c, int sock_num) {
+        sub1 = zmq::zmq_socket(ctx, ZMQ_SUB);
+        zmq::zmq_connect(sub1, "tcp://192.168.11.25:5600");
+        zmq::zmq_setsockopt(sub1, ZMQ_SUBSCRIBE, *c, 1);
+        int timeout = 10000;
+        zmq::zmq_setsockopt(sub1, ZMQ_RCVTIMEO, &timeout, sizeof(int));
+        _read1 = new std::thread(&threadFn, this, 1);
+    }
 
 public:
     void *ctx = nullptr;
@@ -73,6 +81,7 @@ private: //for mqtt
     int _mqtt_pub_qos = 2;
     int _mqtt_keep_alive = {60};
     vector<string> _mqtt_sub_topics;
+    vector<string> _zmq_sub_topics;
 };
 
 EXPORT_TASK_API

@@ -65,7 +65,7 @@ void bTask::zmq_proc(void* sub){
 
 bool bTask::configure()
 {
-
+    ctx = zmq::zmq_ctx_new();
     //initialize mosquitto
     if (const int ret = mosqpp::lib_init() != MOSQ_ERR_SUCCESS)
     {
@@ -119,24 +119,24 @@ bool bTask::configure()
         else
             console::warn("({}){}", conret, mosqpp::strerror(conret));
     }
-    ctx = zmq::zmq_ctx_new();
-    sub1 = zmq::zmq_socket(ctx, ZMQ_SUB);
-    sub2 = zmq::zmq_socket(ctx, ZMQ_SUB);
-    sub3 = zmq::zmq_socket(ctx, ZMQ_SUB);
-    int rc = zmq::zmq_connect(sub1, "tcp://192.168.11.25:5600");
-    rc = zmq::zmq_connect(sub2, "tcp://192.168.11.25:5600");
-    rc = zmq::zmq_connect(sub3, "tcp://192.168.11.25:5600");
-    rc = zmq::zmq_setsockopt(sub1, ZMQ_SUBSCRIBE, "1", 1);
-    rc = zmq::zmq_setsockopt(sub2, ZMQ_SUBSCRIBE, "2", 1);
-    rc = zmq::zmq_setsockopt(sub3, ZMQ_SUBSCRIBE, "3", 1);    
-    int timeout = 10000;
-    rc = zmq::zmq_setsockopt(sub1, ZMQ_RCVTIMEO, &timeout, sizeof(int));
-    rc = zmq::zmq_setsockopt(sub2, ZMQ_RCVTIMEO, &timeout, sizeof(int));
-    rc = zmq::zmq_setsockopt(sub3, ZMQ_RCVTIMEO, &timeout, sizeof(int));
-    console::info("ready?");
-    _read1 = new std::thread(&threadFn, this, 1);
-    _read2 = new std::thread(&threadFn, this, 2);
-    _read3 = new std::thread(&threadFn, this, 3);
+
+    if (config.find("zmq") != config.end()) {
+        json zmq_param = config["zmq"];
+        if (zmq_param.find("prefix") != zmq_param.end())
+        {
+            for (json::iterator itr = zmq_param["prefix"].begin(); itr != zmq_param["prefix"].end(); ++itr)
+            {
+                _zmq_sub_topics.emplace_back(*itr);
+            }
+        }
+    }
+    int sock_num = 1;
+    for (string top : _zmq_sub_topics)
+    {
+        zmq_sock_sub(top.c_str(), sock_num);
+        console::info("> set ZMQ Sub. Topic : {}", top);
+        sock_num++;
+    }
 //    _read->joinable();
 //  console::info("{}", std::thread::hardware_concurrency());
     return true;
