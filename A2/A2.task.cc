@@ -90,11 +90,6 @@ void a2Task::execute()
 
     int rc = zmq::zstr_send(pub, "hello");
     console::info("hello sent");
-    rc = zmq::zstr_send(pub, "henno");
-    console::info("henno sent");
-    rc = zmq::zstr_send(pub, "no");
-    console::info("no sent");
-    console::info("msg send");
 }
 
 void a2Task::cleanup()
@@ -103,7 +98,7 @@ void a2Task::cleanup()
     this->disconnect();
     this->loop_stop();
     mosqpp::lib_cleanup();
-    //    zmq::zmq_ctx_destroy(ctx);
+//    zmq::zmq_ctx_destroy(ctx);
 }
 
 void a2Task::pause()

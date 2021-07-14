@@ -4,31 +4,30 @@
 #include <cstring>
 
 bool _thread_except = false;
+int num =0;
 
-void threadFn(bTask* pclass)
+void threadFn(bTask* pclass, int a)
 {
     console::info("thread");
 
     while(1){
-        console::info("1");
         if(pclass){
-            console::info("2");
-            pclass->zmq_proc();
-            console::info("3");
+            if (a == 1) {
+                pclass->zmq_proc(pclass->sub1);
+            }
+            else if (a == 2) {
+                pclass->zmq_proc(pclass->sub2);
+            }
+            else if (a == 3) {
+                pclass->zmq_proc(pclass->sub3);
+            }                        
         }
-        console::info("4");
         std::this_thread::sleep_for(100ms);
         if (_thread_except == true) {
             break;
         }
     }
-    console::info("5");
-
-    // while(1){
-    //     char *string = zmq::zstr_recv(sub);
-    //     console::info("received {}", string);
-    //     zmq::zstr_free(&string);
-    // }
+    console::info("Thread Termination");
 }
 
 //static component instance that has only single instance
@@ -48,11 +47,12 @@ void release()
     }
 }
 
-void bTask::zmq_proc(){
+void bTask::zmq_proc(void* sub){
     if(sub){
         char *string = zmq::zstr_recv(sub);
         if (string != nullptr) {
             console::info("received {}", string);
+            num += *string-'0';
         }
         else {
             _thread_except = true;
@@ -120,13 +120,23 @@ bool bTask::configure()
             console::warn("({}){}", conret, mosqpp::strerror(conret));
     }
     ctx = zmq::zmq_ctx_new();
-    sub = zmq::zmq_socket(ctx, ZMQ_SUB);
-    int rc = zmq::zmq_connect(sub, "tcp://192.168.11.25:5600");
-    rc = zmq::zmq_setsockopt(sub, ZMQ_SUBSCRIBE, "hi", 2);
-    int timeout = 5000;
-    rc = zmq::zmq_setsockopt(sub, ZMQ_RCVTIMEO, &timeout, sizeof(int));
+    sub1 = zmq::zmq_socket(ctx, ZMQ_SUB);
+    sub2 = zmq::zmq_socket(ctx, ZMQ_SUB);
+    sub3 = zmq::zmq_socket(ctx, ZMQ_SUB);
+    int rc = zmq::zmq_connect(sub1, "tcp://192.168.11.25:5600");
+    rc = zmq::zmq_connect(sub2, "tcp://192.168.11.25:5600");
+    rc = zmq::zmq_connect(sub3, "tcp://192.168.11.25:5600");
+    rc = zmq::zmq_setsockopt(sub1, ZMQ_SUBSCRIBE, "1", 1);
+    rc = zmq::zmq_setsockopt(sub2, ZMQ_SUBSCRIBE, "2", 1);
+    rc = zmq::zmq_setsockopt(sub3, ZMQ_SUBSCRIBE, "3", 1);    
+    int timeout = 10000;
+    rc = zmq::zmq_setsockopt(sub1, ZMQ_RCVTIMEO, &timeout, sizeof(int));
+    rc = zmq::zmq_setsockopt(sub2, ZMQ_RCVTIMEO, &timeout, sizeof(int));
+    rc = zmq::zmq_setsockopt(sub3, ZMQ_RCVTIMEO, &timeout, sizeof(int));
     console::info("ready?");
-    _read = new std::thread(&threadFn, this);
+    _read1 = new std::thread(&threadFn, this, 1);
+    _read2 = new std::thread(&threadFn, this, 2);
+    _read3 = new std::thread(&threadFn, this, 3);
 //    _read->joinable();
 //  console::info("{}", std::thread::hardware_concurrency());
     return true;
@@ -134,15 +144,25 @@ bool bTask::configure()
 
 void bTask::execute()
 {
-    console::info("waiting,,,,(execute)");
+    console::info("{}", num);
 }
 
 void bTask::cleanup()
 {
-    if(_read){
-        _read->join();
-        delete _read;
-        _read = nullptr;
+    if(_read1){
+        _read1->join();
+        delete _read1;
+        _read1 = nullptr;
+    }
+    if(_read2){
+        _read2->join();
+        delete _read2;
+        _read2 = nullptr;
+    }
+    if(_read3){
+        _read3->join();
+        delete _read3;
+        _read3 = nullptr;
     }
 
     //MQTT connection close

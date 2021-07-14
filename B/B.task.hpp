@@ -53,17 +53,19 @@ private:
     virtual void on_log(int level, const char *str) override;
     virtual void on_error() override;
 
-
 public:
-    void zmq_proc();
+    void zmq_proc(void *sub);
 
 public:
     void *ctx = nullptr;
-    void *sub = nullptr;
+    void *sub1 = nullptr;
+    void *sub2 = nullptr;
+    void *sub3 = nullptr;    
 
 private:
-    std::thread* _read = nullptr;
-
+    std::thread* _read1 = nullptr;
+    std::thread* _read2 = nullptr;    
+    std::thread* _read3 = nullptr;
 private: //for mqtt
     string _mqtt_broker{"127.0.0.1"};
     int _mqtt_port{1883};

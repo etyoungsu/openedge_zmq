@@ -86,8 +86,12 @@ bool aTask::configure()
 
 void aTask::execute()
 {
-    int rc = zmq::zstr_send(pub, "hi");
-    console::info("hi msg sent");
+    int rc = zmq::zstr_send(pub, "1");
+    console::info("1 msg sent");
+    rc = zmq::zstr_send(pub, "2");
+    console::info("2 msg sent");
+    rc = zmq::zstr_send(pub, "3");
+    console::info("3 msg sent");        
 }
 
 void aTask::cleanup()
