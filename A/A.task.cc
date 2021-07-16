@@ -79,8 +79,16 @@ bool aTask::configure()
     }
     ctx = zmq::zmq_ctx_new();
     pub = zmq::zmq_socket(ctx, ZMQ_PUB);
-    int rc = zmq::zmq_bind(pub, "tcp://*:5600");
+    int rc = zmq::zmq_bind(pub, "tcp://*:5000");
     console::info("zmq bind completed");
+    // char end_point[1024];
+    // size_t size = sizeof(end_point);
+    // zmq::zmq_getsockopt(pub, ZMQ_LAST_ENDPOINT, &end_point, &size);
+    // console::info("{}", end_point);
+    // char *port = strtok(end_point, ":");
+    // port = strtok(end_point, ":");
+    // port = strtok(end_point, ":");
+    // console::info("{}", port);
     return true;
 }
 
@@ -91,7 +99,11 @@ void aTask::execute()
     rc = zmq::zstr_send(pub, "2");
     console::info("2 msg sent");
     rc = zmq::zstr_send(pub, "3");
-    console::info("3 msg sent");        
+    console::info("3 msg sent");
+    rc = zmq::zstr_send(pub, "4");
+    console::info("4 msg sent");
+    rc = zmq::zstr_send(pub, "5");
+    console::info("5 msg sent");                  
 }
 
 void aTask::cleanup()

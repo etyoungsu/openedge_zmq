@@ -2,28 +2,22 @@
 #include "B.task.hpp"
 #include <openedge/log.hpp>
 #include <cstring>
+#include <vector>
 
 bool _thread_except = false;
 int num =0;
 
-void threadFn(bTask* pclass, int a)
+void threadFn(bTask* pclass, void *sub)
 {
     console::info("thread");
 
     while(1){
         if(pclass){
-            if (a == 1) {
-                pclass->zmq_proc(pclass->sub1);
-            }
-            else if (a == 2) {
-                pclass->zmq_proc(pclass->sub2);
-            }
-            else if (a == 3) {
-                pclass->zmq_proc(pclass->sub3);
-            }                        
+            pclass->zmq_proc(sub);
         }
         std::this_thread::sleep_for(100ms);
         if (_thread_except == true) {
+            _thread_except = false;
             break;
         }
     }
@@ -130,12 +124,18 @@ bool bTask::configure()
             }
         }
     }
-    int sock_num = 1;
-    for (string top : _zmq_sub_topics)
-    {
-        zmq_sock_sub(top.c_str(), sock_num);
-        console::info("> set ZMQ Sub. Topic : {}", top);
-        sock_num++;
+    int sub_size = _zmq_sub_topics.size();
+    for(int i=0; i<sub_size; i++){
+        sub.push_back(zmq::zmq_socket(ctx, ZMQ_SUB));
+        zmq::zmq_connect(sub[i], "tcp://192.168.11.13:5000");
+        // const char *topic_const = _zmq_sub_topics[i].c_str();
+        // char *topic = (char*)topic_const;
+        string topic = _zmq_sub_topics[i];
+        zmq::zmq_setsockopt(sub[i], ZMQ_SUBSCRIBE, topic.data(), topic.size());
+        int timeout = 10000;
+        zmq::zmq_setsockopt(sub[i], ZMQ_RCVTIMEO, &timeout, sizeof(int));
+        console::info("> set ZMQ Sub. Topic : {}", _zmq_sub_topics[i]);
+        _read.push_back(new std::thread(&threadFn, this, sub[i]));
     }
 //    _read->joinable();
 //  console::info("{}", std::thread::hardware_concurrency());
@@ -144,25 +144,15 @@ bool bTask::configure()
 
 void bTask::execute()
 {
-    console::info("{}", num);
+    console::info("sum {}", num);
 }
 
 void bTask::cleanup()
 {
-    if(_read1){
-        _read1->join();
-        delete _read1;
-        _read1 = nullptr;
-    }
-    if(_read2){
-        _read2->join();
-        delete _read2;
-        _read2 = nullptr;
-    }
-    if(_read3){
-        _read3->join();
-        delete _read3;
-        _read3 = nullptr;
+    for (int i=0; i<sub.size(); i++) {
+        _read[i]->join();
+        delete _read[i];
+        _read[i] = nullptr;
     }
 
     //MQTT connection close
