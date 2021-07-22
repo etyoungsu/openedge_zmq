@@ -51,7 +51,7 @@ namespace oe {
                     virtual void cleanup() = 0;
                     virtual void pause() = 0;
                     virtual void resume() = 0;
-                    virtual void on_msg(char msg) = 0;
+                    virtual void use_msg(const char* msg) = 0;
 
                 protected:
                     const core::profile* getProfile() { 

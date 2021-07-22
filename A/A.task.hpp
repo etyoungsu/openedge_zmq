@@ -36,6 +36,7 @@ class aTask : public oe::core::task::runnable, private mosqpp::mosquittopp  {
         void cleanup() override;
         void pause() override;
         void resume() override;
+        void use_msg(const char* msg) override;
 
     private:
         //MQTT Callback functions

@@ -79,7 +79,7 @@ bool aTask::configure()
     }
     ctx = zmq::zmq_ctx_new();
     pub = zmq::zmq_socket(ctx, ZMQ_PUB);
-    int rc = zmq::zmq_bind(pub, "tcp://*:5000");
+    int rc = zmq::zmq_bind(pub, "tcp://*:5500");
     console::info("zmq bind completed");
     // char end_point[1024];
     // size_t size = sizeof(end_point);
@@ -95,15 +95,7 @@ bool aTask::configure()
 void aTask::execute()
 {
     int rc = zmq::zstr_send(pub, "1");
-    console::info("1 msg sent");
-    rc = zmq::zstr_send(pub, "2");
-    console::info("2 msg sent");
-    rc = zmq::zstr_send(pub, "3");
-    console::info("3 msg sent");
-    rc = zmq::zstr_send(pub, "4");
-    console::info("4 msg sent");
-    rc = zmq::zstr_send(pub, "5");
-    console::info("5 msg sent");                  
+    console::info("1 msg sent");               
 }
 
 void aTask::cleanup()
@@ -137,6 +129,10 @@ void aTask::on_disconnect(int rc)
 
 void aTask::on_publish(int mid)
 {
+}
+
+void aTask::use_msg(const char* msg) {
+
 }
 
 void aTask::on_message(const struct mosquitto_message *message)

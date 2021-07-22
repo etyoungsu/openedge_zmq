@@ -144,7 +144,6 @@ bool bTask::configure()
 
 void bTask::execute()
 {
-    console::info("sum {}", num);
 }
 
 void bTask::cleanup()
@@ -184,6 +183,10 @@ void bTask::on_disconnect(int rc)
 
 void bTask::on_publish(int mid)
 {
+}
+
+void bTask::use_msg(const char* msg) {
+    console::info("{}", msg);
 }
 
 void bTask::on_message(const struct mosquitto_message *message)
